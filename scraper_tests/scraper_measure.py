@@ -22,6 +22,7 @@ parser.add_option('-j', action="store_true", default=False, help="Jump initializ
 parser.add_option('-d', action="store_true", default=False, help="Specify a given destination position index")
 parser.add_option('--idx1', action="store", dest="arg_idx_1", type="int", default=0, help="CTRL 1 destination position index")
 parser.add_option('--idx2', action="store", dest="arg_idx_2", type="int", default=0, help="CTRL 2 destination position index")
+parser.add_option('-b', action="store_true", default=False, help="Move forward for the specified number of points and then the same backwards. Does not work when a destination is specified.")
 
 # parse
 (options, args) = parser.parse_args()
@@ -38,6 +39,7 @@ jump = options.j
 specify_dest = options.d
 dest_index_1 = options.arg_idx_1
 dest_index_2 = options.arg_idx_2
+backwards = options.b
 
 # get date and time string
 time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -233,7 +235,7 @@ if specify_dest:
         f1.write(ctrl_1_rb+"\n")
     with open(LOG_FILE_2, 'a') as f2:
         f2.write(ctrl_2_rb+"\n")
-else:
+elif backwards:
     # forward motion
     for i in range(0, point_cnt):
         # print msg
@@ -265,6 +267,29 @@ else:
         print '---> Moving CTRL 2 to position '+str(track_2[i])
         print ' '
         # go to previous position
+        caput(CTRL_1_POS, track_1[i], wait=False)
+        caput(CTRL_2_POS, track_2[i], wait=True)
+        caput(CTRL_1_POS, track_1[i], wait=True) # dummy cmd to check completion
+        # wait user input
+        raw_input('====> | Press <ENTER> to continue | ')
+        print ' '
+        # get position readbacks
+        ctrl_1_rb = caget(CTRL_1_RB, as_string=True, timeout=10)
+        ctrl_2_rb = caget(CTRL_2_RB, as_string=True, timeout=10)
+        with open(LOG_FILE_1, 'a') as f1:
+            f1.write(ctrl_1_rb+"\n")
+        with open(LOG_FILE_2, 'a') as f2:
+            f2.write(ctrl_2_rb+"\n")
+else:
+    # forward motion
+    for i in range(0, point_cnt):
+        # print msg
+        print '--> Move count '+str(i+1)+' / '+str(point_cnt)
+        print '---> Array position is '+str(i)
+        print '---> Moving CTRL 1 to position '+str(track_1[i])
+        print '---> Moving CTRL 2 to position '+str(track_2[i])
+        print ' '
+        # go to next position
         caput(CTRL_1_POS, track_1[i], wait=False)
         caput(CTRL_2_POS, track_2[i], wait=True)
         caput(CTRL_1_POS, track_1[i], wait=True) # dummy cmd to check completion
