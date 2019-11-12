@@ -131,8 +131,8 @@ while True:
     data_ict1 = np.asarray(data_ict1)
     data_ict2 = np.asarray(data_ict2)
     # convert data from counts to engineering units
-    data_ict1 = data_ict1 * y_increment_ict1 + y_origin_ict1
-    data_ict2 = data_ict2 * y_increment_ict2 + y_origin_ict2
+    data_ict1 = data_ict1 * float(y_increment_ict1) + float(y_origin_ict1)
+    data_ict2 = data_ict2 * float(y_increment_ict2) + float(y_origin_ict2)
     # subtract base line from data
     data_ict1 = base_line_sub(data_ict1)
     data_ict2 = base_line_sub(data_ict2)
