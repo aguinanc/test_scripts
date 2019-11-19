@@ -142,5 +142,6 @@ while True:
     # divide by sensor conv factor
     ict1_charge = ict1_charge / DIV_FACTOR
     ict2_charge = ict2_charge / DIV_FACTOR
+    # DO SOMETHING WITH RESULT
 
 osc_socket.close()
