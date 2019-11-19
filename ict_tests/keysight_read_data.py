@@ -37,7 +37,7 @@ osc_socket.write(':WAVeform:SOURce CHANnel'+str(channel_a))
 
 time.sleep(1)
 
-# save TDR response
+# save waveform
 with open(filename+'chan'+str(channel_a), 'a') as f:
     data = osc_socket.query(':WAVeform:DATA?')
     f.write("\n")
@@ -48,7 +48,7 @@ with open(filename+'chan'+str(channel_a), 'a') as f:
 # choose osc channel
 #osc_socket.write(':WAVeform:SOURce CHANnel'+str(channel_b))
 
-# save TDR response
+# save waveform
 #with open(filename+'chan'+str(channel_b), 'a') as f:
 #    data = osc_socket.query(':WAVeform:DATA?')
 #    f.write("\n")
