@@ -13,6 +13,20 @@ import math
 
 from epics import caget, caput
 
+date_time = datetime.datetime.now()
+
+#### Classes
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+    def flush(self):
+        pass
+
 #### Parsing
 
 # setup
@@ -128,17 +142,24 @@ parser.add_argument(
 )
 parser.add_argument(
     '--emergency-action-pv',
-    action="store", dest="emergency_action_pv_list", type=str,
+    action="append", dest="emergency_action_pv_list", type=str,
     help="Append to the list of PVs that should be set when an\n"
          " emergency condition (with '!') is met in some check.",
     required=False,
 )
 parser.add_argument(
     '--emergency-action-value',
-    action="store", dest="emergency_action_value_list", type=str,
+    action="append", dest="emergency_action_value_list", type=str,
     help="Append to the list of values to be passed to the emergency\n"
          " action PVs when an emergency condition (with '!') is met\n"
          "for some check.",
+    required=False,
+)
+parser.add_argument(
+    '--log-filename',
+    action="store", dest="log_filename", type=str,
+    default="move_and_repeat_log",
+    help="Name of the file to store stdout info.",
     required=False,
 )
 
@@ -168,6 +189,7 @@ during_motion_timeout = args.during_motion_timeout
 before_motion_timeout = args.before_motion_timeout
 emergency_action_pv_list = args.emergency_action_pv_list
 emergency_action_value_list = args.emergency_action_value_list
+log_filename = args.log_filename
 
 # replace None values for lists
 if cmd_pv_list is None:
@@ -241,20 +263,22 @@ if repeat_count < 0:
 
 # check match between number of emergency action PVs and values
 if len(emergency_action_pv_list) != len(emergency_action_value_list):
+    print("pv_list")
+    print(emergency_action_pv_list)
+    print("value_list")
+    print(emergency_action_value_list)
     print("Error - number of emergency action PVs and values passed"
           " does not match.")
     sys.exit(1)
 
 #### Auxiliary Functions
 
-def emergency_stop(emergency_action_pv_list,
-                   emergency_action_value_list):
+def emergency_stop(pv_list, value_list):
     """ Command all PVs necessary to perform a motion Stop """
     try:
-        list_size = len(emergency_action_pv_list)
+        list_size = len(pv_list)
         for i in range(0, list_size):
-            caput(emergency_action_pv_list[i],
-                  emergency_action_value_list)
+            caput(pv_list[i], value_list[i], wait=False)
     except Exception:
         traceback.print_exc(file=sys.stdout)
         print('Error - failed to send motion stop commands')
@@ -271,17 +295,18 @@ def check_conditions(condition_list, timeout):
     t_delay = 0.1
     res = (False, None)
     emergency_cond_idx_list = []
+    ignore_cond_idx_list = []
     # if empty list, return immediately
     if cond_count == 0:
         return (True, None, -1, False, False)
-    # check if must wait until timeout
-    for condition in condition_list:
-        if condition.replace(' ','') == 'wait':
-            wait = True
     # check which conditions are of the emergency type
+    # and check if must wait until timeout
     for idx in range(0, cond_count):
         if '!' in condition_list[idx]:
             emergency_cond_idx_list.append(idx)
+        if condition_list[idx].replace(' ','') == 'wait':
+            wait = True
+            ignore_cond_idx_list.append(idx)
     # monitor conditions until they are true
     while True:
         if time.time() - t_start > timeout:
@@ -289,20 +314,26 @@ def check_conditions(condition_list, timeout):
             break
         all_ok = True
         for i in range(0, cond_count):
+            # ignore single keywords
+            if i in ignore_cond_idx_list:
+                continue
             condition = condition_list[i]
+            # check codition
             res = check_condition(condition)
             # regular condition not met yet
-            if res[0] is False:
+            if res[0] is False and i not in emergency_cond_idx_list:
                 all_ok = False
             # met condition is an emergency, test should stop
             if res[0] is True and i in emergency_cond_idx_list:
                 return (res[0], res[1], i, False, True)
-        if all_ok:
+        if all_ok and not wait:
             break
         time.sleep(t_delay)
-    if wait and not timed_out:
-        while time.time() - t_start < timeout:
-            time.sleep(t_delay)
+    if wait:
+        # treat special case when there is only one condition
+        # and it is the keyword 'wait'
+        if cond_count - len(ignore_cond_idx_list) == 0:
+            res = (True, None)
         return (res[0], res[1], cond_count-1, False, False)
     return (res[0], res[1], cond_count-1, timed_out, False)
 
@@ -355,17 +386,18 @@ def check_condition(cond):
         check = False
         if comp == 'eq':
             if tol != 0.0:
-                check = (value1 <= value2_max) and (value1 >= value2_min)
+                check = (float(value1) <= value2_max
+                         and float(value1) >= value2_min)
             else:
                 check = (value1 == value2)
         elif comp == 'gt':
             if tol != 0.0:
-                check = value1 > value2_min
+                check = float(value1) > value2_min
             else:
                 check = float(value1) > float(value2)
         elif comp == 'lt':
             if tol != 0.0:
-                check = value1 < value2_max
+                check = float(value1) < value2_max
             else:
                 check = float(value1) < float(value2)
         return (check, (value1, value2))
@@ -373,6 +405,16 @@ def check_condition(cond):
         traceback.print_exc(file=sys.stdout)
 
     return (False, None)
+
+#### Start Logging Output
+
+log_filename = (log_filename
+               + date_time.strftime('_%d-%m-%Y_%Hh%Mm')
+               + '.log'
+)
+testLog = Logger()
+testLog.log = open(log_filename, "w")
+sys.stdout = testLog
 
 #### Movement Procedure
 
@@ -408,7 +450,7 @@ try:
             print('  {0}/{1} repetitions.\n'.format(iter_count,
                 repeat_count))
             # check conditions BEFORE MOVE
-            sys.stdout.write('    Checking conditions before move...')
+            print('    Checking conditions before move...')
             res = check_conditions(check_before_motion_list,
                                    before_motion_timeout)
             status_check = res[0]
@@ -434,14 +476,14 @@ try:
                       ' move. Profile repetition #'+str(iter_count)+
                       ', point #'+str(idx)+'. Last condition being '
                       'checked: '+str(check_before_motion_list[cond_idx])
-                      +'for value1='+str(values[0])+'and value2='
+                      +' for value1='+str(values[0])+' and value2='
                       +str(values[1]))
                 emergency_stop(emergency_action_pv_list,
                                emergency_action_value_list)
                 sys.exit(1)
             else:
                 # write to the same line
-                sys.stdout.write('  OK\n')
+                sys.stdout.write('    OK\n')
             # MAKE MOVE
             print('    Starting motion.')
             # update set points
@@ -451,7 +493,7 @@ try:
             for cmd_pv in cmd_pv_list:
                 caput(cmd_pv, 1, wait=False)
             # check conditions DURING MOVE
-            sys.stdout.write('    Checking conditions during move...')
+            print('    Checking conditions during move...')
             res = check_conditions(check_during_motion_list,
                                    during_motion_timeout)
             status_check = res[0]
@@ -477,16 +519,16 @@ try:
                       ' move. Profile repetition #'+str(iter_count)+
                       ', point #'+str(idx)+'. Last condition being '
                       'checked: '+str(check_during_motion_list[cond_idx])
-                      +'for value1='+str(values[0])+'and value2='
+                      +' for value1='+str(values[0])+' and value2='
                       +str(values[1]))
                 emergency_stop(emergency_action_pv_list,
                                emergency_action_value_list)
                 sys.exit(1)
             else:
                 # write to the same line
-                sys.stdout.write('  OK\n')
+                sys.stdout.write('    OK\n')
             # check conditions AFTER MOVE
-            sys.stdout.write('    Checking conditions after move...')
+            print('    Checking conditions after move...')
             res = check_conditions(check_after_motion_list,
                                    after_motion_timeout)
             status_check = res[0]
@@ -512,14 +554,14 @@ try:
                       ' move. Profile repetition #'+str(iter_count)+
                       ', point #'+str(idx)+'. Last condition being '
                       'checked: '+str(check_after_motion_list[cond_idx])
-                      +'for value1='+str(values[0])+'and value2='
+                      +' for value1='+str(values[0])+' and value2='
                       +str(values[1]))
                 emergency_stop(emergency_action_pv_list,
                                emergency_action_value_list)
                 sys.exit(1)
             else:
                 # write to the same line
-                sys.stdout.write('  OK\n')
+                sys.stdout.write('    OK\n')
         # if configured to, reverse position scan
         if reverse_at_end:
             if scan_start == 0:
@@ -537,9 +579,9 @@ except Exception:
 
 
 print('\n'
-      '*****************************'
-      '*       Test Finished       *'
-      '*****************************'
+      '*****************************\n'
+      '*       Test Finished       *\n'
+      '*****************************\n'
       '\n '
 )
 
