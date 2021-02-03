@@ -14,5 +14,6 @@
 --after-motion-timeout 10.0 \
 --emergency-action-pv und:Stop-Cmd \
 --emergency-action-value True \
+--command-delay 0.5 \
 --log-filename test_log
 

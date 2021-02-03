@@ -156,6 +156,13 @@ parser.add_argument(
     required=False,
 )
 parser.add_argument(
+    '--command-delay',
+    action="store", dest="command_delay", type=float,
+    default=1.0,
+    help="Delay between set point update and setting the command PV.",
+    required=False,
+)
+parser.add_argument(
     '--log-filename',
     action="store", dest="log_filename", type=str,
     default="move_and_repeat_log",
@@ -189,6 +196,7 @@ during_motion_timeout = args.during_motion_timeout
 before_motion_timeout = args.before_motion_timeout
 emergency_action_pv_list = args.emergency_action_pv_list
 emergency_action_value_list = args.emergency_action_value_list
+command_delay = args.command_delay
 log_filename = args.log_filename
 
 # replace None values for lists
@@ -489,6 +497,8 @@ try:
             # update set points
             for coord in range(0, len(point)):
                 caput(sp_pv_list[coord], point[coord], wait=False)
+            # apply command delay
+            time.sleep(command_delay)
             # set command PVs
             for cmd_pv in cmd_pv_list:
                 caput(cmd_pv, 1, wait=False)
