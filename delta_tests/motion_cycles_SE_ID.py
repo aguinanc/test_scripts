@@ -2,8 +2,8 @@ import numpy as _np
 import time as _time
 from epics import caget, caput
 
-MAX_FWD_POS = 26.0
-MAX_BKW_POS = -26.0
+MAX_FWD_POS = 26.25
+MAX_BKW_POS = -26.25
 
 INITIAL_POS = 0.0
 
@@ -28,8 +28,13 @@ couplings = {
         'CID': 9,
         }
 
+mirror_config = {
+        'Normal': 0,
+        'Mirror': 1,
+        }
+
 mode = couplings['Phase']
-mirror_mode = False
+mirror_mode = mirror_config['Normal']
 step = 1
 back_step = step*(-1)
 
@@ -48,13 +53,17 @@ back_step = step*(-1)
 # Position lists
 
 # go forward in steps
-pos_list_1 = _np.arange(INITIAL_POS+step, MAX_FWD_POS+step, step)
+#pos_list_1 = _np.arange(INITIAL_POS+step, MAX_FWD_POS+step, step)
+pos_list_1 = [MAX_FWD_POS]
 # return to start in steps
-pos_list_2 = _np.arange(MAX_FWD_POS+back_step, INITIAL_POS+back_step, back_step)
+#pos_list_2 = _np.arange(MAX_FWD_POS+back_step, INITIAL_POS+back_step, back_step)
+pos_list_2 = [INITIAL_POS]
 # go backwards in steps
-pos_list_3 = _np.arange(INITIAL_POS+back_step, MAX_BKW_POS+back_step, back_step)
+#pos_list_3 = _np.arange(INITIAL_POS+back_step, MAX_BKW_POS+back_step, back_step)
+pos_list_3 = [MAX_BKW_POS]
 # return to start in steps
-pos_list_4 = _np.arange(MAX_BKW_POS+step, INITIAL_POS+step, step)
+#pos_list_4 = _np.arange(MAX_BKW_POS+step, INITIAL_POS+step, step)
+pos_list_4 = [INITIAL_POS]
 
 def pos_diff(mode, mirror, target):
     # get readback
@@ -106,11 +115,13 @@ def move_abs(mode, mirror, pos):
 for i in range(0, NUMBER_OF_CYCLES):
     # configure coupling
     caput('delta:mod01:Coup-Sel', mode, wait=True)
+    # configure mirror mode
+    mirror = mirror_mode
+    caput('delta:mod01:Mirror-Sel', mirror_mode)
     _time.sleep(DELAY_ADJUST)
     _time.sleep(DELAY_AFTER_CONFIG)
     # move to start position
     pos = INITIAL_POS
-    mirror = mirror_mode
     move_abs(mode, mirror, pos)
     _time.sleep(DELAY_BEFORE_CYCLE)
     # execute first position list
