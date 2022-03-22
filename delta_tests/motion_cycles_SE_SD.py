@@ -35,8 +35,6 @@ mirror_config = {
 
 mode = couplings['GV']
 mirror_mode = mirror_config['Normal']
-step = 1
-back_step = step*(-1)
 
 # Not mirror mode
 ## Phase: CSE + CID
@@ -52,17 +50,9 @@ back_step = step*(-1)
 
 # Position lists
 
-# go forward in steps
-#pos_list_1 = _np.arange(INITIAL_POS+step, MAX_FWD_POS+step, step)
 pos_list_1 = [MAX_FWD_POS]
-# return to start in steps
-#pos_list_2 = _np.arange(MAX_FWD_POS+back_step, INITIAL_POS+back_step, back_step)
 pos_list_2 = [INITIAL_POS]
-# go backwards in steps
-#pos_list_3 = _np.arange(INITIAL_POS+back_step, MAX_BKW_POS+back_step, back_step)
 pos_list_3 = [MAX_BKW_POS]
-# return to start in steps
-#pos_list_4 = _np.arange(MAX_BKW_POS+step, INITIAL_POS+step, step)
 pos_list_4 = [INITIAL_POS]
 
 def pos_diff(mode, mirror, target):
