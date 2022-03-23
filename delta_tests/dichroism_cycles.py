@@ -76,6 +76,14 @@ mode_list = [
         'GV',
         ]
 
+# Fix positions since axes reference frame
+# is reversed with respect to magnetic
+# reference frame
+def neg_list(l):
+    return [-1*i for i in l]
+init_pos_list = neg_list(init_pos_list)
+pos_list = neg_list(pos_list)
+
 def pos_diff(mode, target):
     # get right readback
     if mode == couplings['All']:
