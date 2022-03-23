@@ -10,7 +10,7 @@ INITIAL_POS = 0.0
 NUMBER_OF_CYCLES = 500
 
 DELAY_ADJUST = 0.2
-DELAY_POINT = 3.0
+DELAY_POINT = 15.0
 DELAY_LIST = 2.0
 DELAY_BEFORE_CYCLE = 3.0
 DELAY_AFTER_CONFIG = 1.0
@@ -115,7 +115,7 @@ for i in range(0, NUMBER_OF_CYCLES):
     move_abs(mode, mirror, pos)
     _time.sleep(DELAY_BEFORE_CYCLE)
     # execute first position list
-    print('-- New cycle start --')
+    print('---  Start of cycle {0}/{1}  ---'.format(i+1, NUMBER_OF_CYCLES))
     for p in pos_list_1:
         move_abs(mode, mirror, p)
         print('  Moving to {}'.format(p))
@@ -136,5 +136,5 @@ for i in range(0, NUMBER_OF_CYCLES):
         print('  Moving to {}'.format(p))
         _time.sleep(DELAY_POINT)
     _time.sleep(DELAY_LIST)
-    print('Cycle {} finished'.format(i+1))
+print('---  Test finished  ---')
 
