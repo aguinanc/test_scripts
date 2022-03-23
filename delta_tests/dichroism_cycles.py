@@ -5,10 +5,8 @@ from epics import caget, caput
 NUMBER_OF_CYCLES = 500
 
 DELAY_ADJUST = 0.2
-DELAY_POINT = 3.0
-DELAY_WAIT = 2.0
-DELAY_BEFORE_CYCLE = 3.0
-DELAY_AFTER_CONFIG = 1.0
+DELAY_POINT = 17.0
+DELAY_WAIT = DELAY_POINT + 0.0
 
 couplings = {
         'None': 0,
@@ -115,8 +113,12 @@ def move_abs(mode, pos):
     move_rel(relpos)
 
 # do initial motion to position device
+print('---  Moving to initial position  ---')
 for i in range(0, len(init_pos_list)):
-    print('---  Moving to initial position  ---')
+    print('  coupling = {0}'.format(init_mode_list[i]))
+    print('  target = {0}'.format(init_pos_list[i]))
+    # disable mirror mode
+    caput('delta:mod01:Mirror-Sel', 0)
     # configure coupling
     coup = couplings[init_mode_list[i]]
     caput('delta:mod01:Coup-Sel', coup, wait=True)
