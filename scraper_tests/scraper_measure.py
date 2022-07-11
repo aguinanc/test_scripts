@@ -98,20 +98,20 @@ OFF_2 = 0
 
 #### Procedure
 
-print '##################################'
-print '#  Scraper Position Measurement  #'
-print '##################################'
-print ' '
+print('##################################')
+print('#  Scraper Position Measurement  #')
+print('##################################')
+print(' ')
 
 if jump:
-    print 'X   X   X   X   X   X   X   X   X   X'
-    print '  Jumping controller configuration'
-    print 'X   X   X   X   X   X   X   X   X   X'
-    print ' '
+    print('X   X   X   X   X   X   X   X   X   X')
+    print('  Jumping controller configuration')
+    print('X   X   X   X   X   X   X   X   X   X')
+    print(' ')
 else:
     # configure controllers
-    print '--> Configuring controllers 0 %' 
-    print ' '
+    print('--> Configuring controllers 0 %')
+    print(' ')
     caput(P_CTRL_1+'AmpEnbl-Sel', 0, wait=True)                      # turn amp off
     caput(P_CTRL_2+'AmpEnbl-Sel', 0, wait=True)
     time.sleep(CONFIG_DELAY)
@@ -130,9 +130,9 @@ else:
     caput(P_CTRL_1+'LowCurrMode-SP', LOWCURR, wait=True)             # set low curr mode
     caput(P_CTRL_2+'LowCurrMode-SP', LOWCURR, wait=True)
     time.sleep(CONFIG_DELAY)
-    print ' '
-    print '--> Configuring controllers 25 %'
-    print ' '
+    print(' ')
+    print('--> Configuring controllers 25 %')
+    print(' ')
     caput(P_CTRL_1+'Mtr.SREV', MTR_SREV, wait=True)           # set steps per rev
     caput(P_CTRL_2+'Mtr.SREV', MTR_SREV, wait=True)
     time.sleep(CONFIG_DELAY)
@@ -151,9 +151,9 @@ else:
     caput(P_CTRL_1+'Mtr.DIR', DIR_1, wait=True)               # set dir ctrl 1
     caput(P_CTRL_2+'Mtr.DIR', DIR_2, wait=True)               # set dir ctrl 2
     time.sleep(CONFIG_DELAY)
-    print ' '
-    print '--> Configuring controllers 50 %'
-    print ' '
+    print(' ')
+    print('--> Configuring controllers 50 %')
+    print(' ')
     caput(P_CTRL_1+'Mtr.OFF', OFF_1, wait=True)               # set offset ctrl 1
     caput(P_CTRL_2+'Mtr.OFF', OFF_2, wait=True)               # set offset ctrl 2
     time.sleep(CONFIG_DELAY)
@@ -175,9 +175,9 @@ else:
     caput(P_CTRL_1+'Mtr.UEIP', UEIP, wait=True)               # set ueip
     caput(P_CTRL_2+'Mtr.UEIP', UEIP, wait=True)
     time.sleep(CONFIG_DELAY)
-    print ' '
-    print '--> Configuring controllers 75 %'
-    print ' '
+    print(' ')
+    print('--> Configuring controllers 75 %')
+    print(' ')
     caput(P_CTRL_1+'BiSSIn-Sel', BISS_IN, wait=True)                 # set biss input
     caput(P_CTRL_2+'BiSSIn-Sel', BISS_IN, wait=True)
     time.sleep(CONFIG_DELAY)
@@ -202,18 +202,18 @@ else:
     caput(P_CTRL_1+'AmpEnbl-Sel', 1, wait=True)                      # turn amp on
     caput(P_CTRL_2+'AmpEnbl-Sel', 1, wait=True)
     time.sleep(CONFIG_DELAY)
-    print ' '
-    print '--> Configuring controllers DONE'
-    print ' '
+    print(' ')
+    print('--> Configuring controllers DONE')
+    print(' ')
     # move controllers to start position
-    print '--> Moving controllers to start position'
-    print ' '
+    print('--> Moving controllers to start position')
+    print(' ')
     caput(CTRL_1_POS, start_pos_1, wait=True)
     caput(CTRL_2_POS, start_pos_2, wait=True)
 
 # wait user input
 raw_input('===> | Press <ENTER> to start measurements | ')
-print ' '
+print(' ')
 
 # get move sequences
 track_1 = np.linspace(start_pos_1, end_pos_1, point_cnt)
@@ -221,13 +221,13 @@ track_2 = np.linspace(start_pos_2, end_pos_2, point_cnt)
 
 if specify_dest:
     # move to specified destination
-    print '--> Moving CTRL 1 to specified destination'
+    print('--> Moving CTRL 1 to specified destination')
     caput(CTRL_1_POS, track_1[dest_index_1], wait=True)
-    print '--> Moving CTRL 2 to specified destination'
+    print('--> Moving CTRL 2 to specified destination')
     caput(CTRL_2_POS, track_2[dest_index_2], wait=True)
     # wait user input
     raw_input('==> | Press <ENTER> to continue | ')
-    print ' '
+    print(' ')
     # get position readbacks
     ctrl_1_rb = caget(CTRL_1_RB, as_string=True, timeout=10)
     ctrl_2_rb = caget(CTRL_2_RB, as_string=True, timeout=10)
@@ -239,18 +239,18 @@ elif backwards:
     # forward motion
     for i in range(0, point_cnt):
         # print msg
-        print '--> Move count '+str(i+1)+' / '+str(point_cnt*2)
-        print '---> Array position is '+str(i)
-        print '---> Moving CTRL 1 to position '+str(track_1[i])
-        print '---> Moving CTRL 2 to position '+str(track_2[i])
-        print ' '
+        print('--> Move count '+str(i+1)+' / '+str(point_cnt*2))
+        print('---> Array position is '+str(i))
+        print('---> Moving CTRL 1 to position '+str(track_1[i]))
+        print('---> Moving CTRL 2 to position '+str(track_2[i]))
+        print(' ')
         # go to next position
         caput(CTRL_1_POS, track_1[i], wait=False)
         caput(CTRL_2_POS, track_2[i], wait=True)
         caput(CTRL_1_POS, track_1[i], wait=True) # dummy cmd to check completion
         # wait user input
         raw_input('====> | Press <ENTER> to continue | ')
-        print ' '
+        print(' ')
         # get position readbacks
         ctrl_1_rb = caget(CTRL_1_RB, as_string=True, timeout=10)
         ctrl_2_rb = caget(CTRL_2_RB, as_string=True, timeout=10)
@@ -261,18 +261,18 @@ elif backwards:
     # backward motion
     for i in range(point_cnt-1, -1, -1):
         # print msg
-        print '--> Move count '+str(2*point_cnt-i)+' / '+str(point_cnt*2)
-        print '---> Array position is '+str(i)
-        print '---> Moving CTRL 1 to position '+str(track_1[i])
-        print '---> Moving CTRL 2 to position '+str(track_2[i])
-        print ' '
+        print('--> Move count '+str(2*point_cnt-i)+' / '+str(point_cnt*2))
+        print('---> Array position is '+str(i))
+        print('---> Moving CTRL 1 to position '+str(track_1[i]))
+        print('---> Moving CTRL 2 to position '+str(track_2[i]))
+        print(' ')
         # go to previous position
         caput(CTRL_1_POS, track_1[i], wait=False)
         caput(CTRL_2_POS, track_2[i], wait=True)
         caput(CTRL_1_POS, track_1[i], wait=True) # dummy cmd to check completion
         # wait user input
         raw_input('====> | Press <ENTER> to continue | ')
-        print ' '
+        print(' ')
         # get position readbacks
         ctrl_1_rb = caget(CTRL_1_RB, as_string=True, timeout=10)
         ctrl_2_rb = caget(CTRL_2_RB, as_string=True, timeout=10)
@@ -284,18 +284,18 @@ else:
     # forward motion
     for i in range(0, point_cnt):
         # print msg
-        print '--> Move count '+str(i+1)+' / '+str(point_cnt)
-        print '---> Array position is '+str(i)
-        print '---> Moving CTRL 1 to position '+str(track_1[i])
-        print '---> Moving CTRL 2 to position '+str(track_2[i])
-        print ' '
+        print('--> Move count '+str(i+1)+' / '+str(point_cnt))
+        print('---> Array position is '+str(i))
+        print('---> Moving CTRL 1 to position '+str(track_1[i]))
+        print('---> Moving CTRL 2 to position '+str(track_2[i]))
+        print(' ')
         # go to next position
         caput(CTRL_1_POS, track_1[i], wait=False)
         caput(CTRL_2_POS, track_2[i], wait=True)
         caput(CTRL_1_POS, track_1[i], wait=True) # dummy cmd to check completion
         # wait user input
         raw_input('====> | Press <ENTER> to continue | ')
-        print ' '
+        print(' ')
         # get position readbacks
         ctrl_1_rb = caget(CTRL_1_RB, as_string=True, timeout=10)
         ctrl_2_rb = caget(CTRL_2_RB, as_string=True, timeout=10)
@@ -304,8 +304,8 @@ else:
         with open(LOG_FILE_2, 'a') as f2:
             f2.write(ctrl_2_rb+"\n")
 
-print '****************************'
-print '*     Program Finished     *'
-print '****************************'
-print ' '
+print('****************************')
+print('*     Program Finished     *')
+print('****************************')
+print(' ')
 
